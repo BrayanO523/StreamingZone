@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opiniones | StreamZone</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --accent: #ec4899;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-light: #f8fafc;
+            --text-gray: #94a3b8;
+            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--primary);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: var(--secondary);
+            bottom: -100px;
+            right: -100px;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: var(--accent);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(30px, 50px);
+            }
+        }
+
+        /* Navbar */
+        nav {
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.9);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--accent);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+
+        /* Opinions Section */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            flex-grow: 1;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-opinion {
+            background: var(--primary);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 2rem;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-opinion:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .testimonial-card {
+            background: rgba(30, 41, 59, 0.6);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .stars {
+            color: #fbbf24;
+            font-size: 0.9rem;
+        }
+
+        .description {
+            color: var(--text-gray);
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 300;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal h2 {
+            margin-bottom: 1.5rem;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-gray);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-gray);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            color: white;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .phone-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .prefix {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.8rem;
+            border-radius: 0.5rem;
+            color: var(--text-gray);
+        }
+
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 1rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.9;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-gray);
+            font-size: 0.9rem;
+            background: rgba(15, 23, 42, 0.9);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <nav>
+        <div class="nav-links">
+            <a href="ventas.html" class="logo">StreamZone</a>
+            <div style="display: flex; gap: 1.5rem;">
+                <a href="ventas.html" class="nav-link">Inicio</a>
+                <a href="#" class="nav-link active">Opiniones</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Lo Que Dicen Nuestros Clientes</h2>
+                <p style="color: var(--text-gray); margin-top: 0.5rem;">Clientes felices, servicios garantizados.</p>
+            </div>
+            <button class="btn-opinion" onclick="openOpinionModal()"><i class="fas fa-pen"></i> Escribir
+                Opinión</button>
+        </div>
+
+        <div id="testimonials-grid" class="testimonials-grid">
+            <p style="text-align: center; grid-column: 1/-1; color: var(--text-gray);">Cargando opiniones...</p>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2025 StreamZone. Todos los derechos reservados.
+    </footer>
+
+    <!-- Opinion Modal -->
+    <div class="modal-overlay" id="opinionModal">
+        <div class="modal">
+            <button class="close-modal" onclick="closeOpinionModal()">&times;</button>
+            <h2>Tu Opinión</h2>
+            <form id="opinionForm" onsubmit="submitOpinion(event)">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="opName" required placeholder="Tu nombre">
+                </div>
+                <div class="form-group">
+                    <label>Celular</label>
+                    <div class="phone-input-group">
+                        <span class="prefix">+504</span>
+                        <input type="number" id="opPhone" required placeholder="12345678"
+                            oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);">
+                    </div>
+                    <small style="color: var(--text-gray); font-size: 0.8rem;">Máximo 8 números.</small>
+                </div>
+                <div class="form-group">
+                    <label>Calificación</label>
+                    <select id="opStars" required
+                        style="background: rgba(15, 23, 42, 0.5); color:white; border: 1px solid rgba(255,255,255,0.1); padding:0.8rem; border-radius:0.5rem; width:100%;">
+                        <option value="5">⭐⭐⭐⭐⭐ Excelente</option>
+                        <option value="4">⭐⭐⭐⭐ Muy bueno</option>
+                        <option value="3">⭐⭐⭐ Bueno</option>
+                        <option value="2">⭐⭐ Regular</option>
+                        <option value="1">⭐ Malo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Comentario</label>
+                    <textarea id="opComment" rows="3" required placeholder="¿Qué te pareció el servicio?"></textarea>
+                </div>
+                <button type="submit" class="btn-submit">Publicar Comentario</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, addDoc, serverTimestamp, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: 'AIzaSyAxSkIEIikfAHa-LpBPjJ2RUL1CrXhBLAY',
+            appId: '1:813285975226:web:ced015d0f1bf1e82b98e83',
+            messagingSenderId: '813285975226',
+            projectId: 'streaming-plat-49327',
+            authDomain: 'streaming-plat-49327.firebaseapp.com',
+            storageBucket: 'streaming-plat-49327.firebasestorage.app',
+            measurementId: 'G-N15BBG3YR5',
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Load Opinions
+        async function loadOpinions() {
+            const container = document.getElementById('testimonials-grid');
+            try {
+                const q = query(collection(db, 'OPINIONES'), limit(50));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    container.innerHTML = `
+                         <div class="testimonial-card">
+                            <p style="text-align: center; color: var(--text-gray);">Sé el primero en opinar.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = '';
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const starsHTML = '<i class="fas fa-star"></i>'.repeat(data.estrellas || 5);
+                    const initials = data.nombre ? data.nombre.substring(0, 2).toUpperCase() : '??';
+
+                    const card = document.createElement('div');
+                    card.className = 'testimonial-card';
+                    card.innerHTML = `
+                        <div class="user-info">
+                            <div class="avatar">${initials}</div>
+                            <div>
+                                <h4>${data.nombre || 'Anónimo'}</h4>
+                                <div class="stars">${starsHTML}</div>
+                            </div>
+                        </div>
+                        <p class="description">"${data.comentario}"</p>
+                    `;
+                    container.appendChild(card);
+                });
+
+            } catch (e) {
+                console.error("Error loading opinions:", e);
+                container.innerHTML = `<p style="text-align: center; grid-column: 1/-1; color: var(--text-gray);">No se pudieron cargar las opiniones.</p>`;
+            }
+        }
+
+        // Opinion Submission
+        window.submitOpinion = async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('opName').value;
+            const phone = document.getElementById('opPhone').value;
+            const stars = document.getElementById('opStars').value;
+            const comment = document.getElementById('opComment').value;
+
+            // Validation
+            if (phone.length !== 8) {
+                alert("El número de celular debe tener exactamente 8 dígitos.");
+                return;
+            }
+
+            const fullPhone = '+504' + phone;
+
+            try {
+                const btn = e.target.querySelector('button');
+                const originalText = btn.innerText;
+                btn.innerText = "Enviando...";
+                btn.disabled = true;
+
+                await addDoc(collection(db, 'OPINIONES'), {
+                    nombre: name,
+                    numero: fullPhone,
+                    estrellas: parseInt(stars),
+                    comentario: comment,
+                    fecha: serverTimestamp()
+                });
+
+                alert("¡Gracias por tu opinión!");
+                document.getElementById('opinionForm').reset();
+                closeOpinionModal();
+                loadOpinions();
+
+                btn.innerText = originalText;
+                btn.disabled = false;
+
+            } catch (err) {
+                console.error(err);
+                alert("Hubo un error al guardar tu opinión. Intenta de nuevo.");
+            }
+        }
+
+        window.openOpinionModal = () => {
+            document.getElementById('opinionModal').style.display = 'flex';
+        }
+        window.closeOpinionModal = () => {
+            document.getElementById('opinionModal').style.display = 'none';
+        }
+
+        window.onclick = (e) => {
+            if (e.target.id === 'opinionModal') closeOpinionModal();
+        }
+
+        loadOpinions();
+
+    </script>
+</body>
+
+</html>

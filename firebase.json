@@ -1,0 +1,41 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "streaming-plat-49327",
+                    "appId": "1:813285975226:android:b40e462ec44b9351b98e83",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "streaming-plat-49327",
+                    "configurations": {
+                        "android": "1:813285975226:android:b40e462ec44b9351b98e83",
+                        "ios": "1:813285975226:ios:ce57653109748aecb98e83",
+                        "macos": "1:813285975226:ios:ce57653109748aecb98e83",
+                        "web": "1:813285975226:web:ced015d0f1bf1e82b98e83"
+                    }
+                }
+            }
+        }
+    },
+    "hosting": {
+        "public": "web",
+        "ignore": [
+            "firebase.json",
+            "**/.*",
+            "**/node_modules/**"
+        ],
+        "rewrites": [
+            {
+                "source": "/",
+                "destination": "/ventas.html"
+            }
+        ]
+    },
+    "firestore": {
+        "rules": "firestore.rules"
+    }
+}
