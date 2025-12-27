@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Seeder Games & VPN</title>
+</head>
+
+<body>
+    <h1>Seeding Games & VPN...</h1>
+    <div id="status">Starting...</div>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: 'AIzaSyAxSkIEIikfAHa-LpBPjJ2RUL1CrXhBLAY',
+            appId: '1:813285975226:web:ced015d0f1bf1e82b98e83',
+            messagingSenderId: '813285975226',
+            projectId: 'streaming-plat-49327',
+            authDomain: 'streaming-plat-49327.firebaseapp.com',
+            storageBucket: 'streaming-plat-49327.firebasestorage.app',
+            measurementId: 'G-N15BBG3YR5',
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const products = [
+            // JUEGOS
+            { name: "Xbox Game Pass Ultimate", price: 350, description: "1 Mes de acceso total (PC + Console)", available: true, promo: true, category: "Juegos" },
+            { name: "PlayStation Plus Deluxe", price: 400, description: "1 Mes de suscripción Deluxe", available: true, promo: true, category: "Juegos" },
+            { name: "Nintendo Switch Online", price: 600, description: "12 Meses Individual", available: true, promo: false, category: "Juegos" },
+            { name: "Minecraft Java & Bedrock", price: 500, description: "Cuenta Completa Permanente", available: true, promo: false, category: "Juegos" },
+            { name: "Fortnite 1000 V-Bucks", price: 250, description: "Recarga directa a tu cuenta", available: true, promo: true, category: "Juegos" },
+
+            // VPN
+            { name: "NordVPN", price: 800, description: "1 Año - Máxima seguridad", available: true, promo: true, category: "VPN" },
+            { name: "ExpressVPN", price: 300, description: "1 Mes - El más rápido", available: true, promo: false, category: "VPN" },
+            { name: "Surfshark", price: 500, description: "6 Meses - Dispositivos ilimitados", available: true, promo: true, category: "VPN" },
+            { name: "CyberGhost", price: 700, description: "1 Año - Servidores optimizados", available: true, promo: false, category: "VPN" }
+        ];
+
+        async function seed() {
+            const statusDiv = document.getElementById('status');
+            try {
+                for (const p of products) {
+                    await addDoc(collection(db, 'products'), {
+                        ...p,
+                        imageUrl: "",
+                        createdAt: serverTimestamp()
+                    });
+                    statusDiv.innerHTML += `<br>Added ${p.category}: ${p.name}`;
+                }
+                statusDiv.innerHTML += "<br><strong>Done!</strong>";
+                document.title = "More Seeding Complete";
+            } catch (e) {
+                statusDiv.innerHTML += `<br>Error: ${e.message}`;
+                console.error(e);
+            }
+        }
+
+        seed();
+    </script>
+</body>
+
+</html>

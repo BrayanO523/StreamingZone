@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -288,8 +289,14 @@ class StatsView extends StatelessWidget {
             leading: const Icon(Icons.star, color: Colors.yellow),
             title: const Text('Ver Opiniones (Web)'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap:
-                () {}, // Could link to webview or internal opinion view later
+            onTap: () async {
+              final url = Uri.parse(
+                'https://streaming-plat-49327.web.app/opiniones.html',
+              );
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url);
+              }
+            },
           ),
         ],
       ),
@@ -1042,7 +1049,16 @@ class _ProductDialogState extends State<ProductDialog> {
   bool _isAvailable = true;
   String _selectedCategory = 'Video';
 
-  final List<String> _categories = ['Video', 'Música', 'Juegos', 'VPN', 'Otro'];
+  final List<String> _categories = [
+    'Video',
+    'Música',
+    'Juegos',
+    'VPN',
+    'Software',
+    'IA',
+    'Seguidores',
+    'Otro',
+  ];
 
   @override
   void initState() {

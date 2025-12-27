@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Seeder Music v2</title>
+</head>
+
+<body>
+    <h1>Seeding Music Products...</h1>
+    <div id="status">Starting...</div>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: 'AIzaSyAxSkIEIikfAHa-LpBPjJ2RUL1CrXhBLAY',
+            appId: '1:813285975226:web:ced015d0f1bf1e82b98e83',
+            messagingSenderId: '813285975226',
+            projectId: 'streaming-plat-49327',
+            authDomain: 'streaming-plat-49327.firebaseapp.com',
+            storageBucket: 'streaming-plat-49327.firebasestorage.app',
+            measurementId: 'G-N15BBG3YR5',
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const products = [
+            { name: "Apple Music", price: 300, description: "3 meses de Apple Music", available: true, promo: true, category: "Música" },
+            { name: "YouTube Music", price: 350, description: "6 meses de YouTube Music", available: true, promo: true, category: "Música" },
+            { name: "TIDAL", price: 300, description: "3 meses de TIDAL", available: true, promo: true, category: "Música" },
+            { name: "Deezer", price: 300, description: "3 meses de Deezer", available: true, promo: true, category: "Música" },
+            { name: "Amazon Music", price: 300, description: "3 meses de Amazon Music", available: true, promo: true, category: "Música" }
+        ];
+
+        async function seed() {
+            const statusDiv = document.getElementById('status');
+            try {
+                for (const p of products) {
+                    await addDoc(collection(db, 'products'), {
+                        ...p,
+                        imageUrl: "",
+                        createdAt: serverTimestamp()
+                    });
+                    statusDiv.innerHTML += `<br>Added ${p.name}`;
+                }
+                statusDiv.innerHTML += "<br><strong>Done!</strong>";
+                document.title = "Music Seeding Complete";
+            } catch (e) {
+                statusDiv.innerHTML += `<br>Error: ${e.message}`;
+                console.error(e);
+            }
+        }
+
+        seed();
+    </script>
+</body>
+
+</html>
