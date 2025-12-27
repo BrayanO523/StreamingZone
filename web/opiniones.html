@@ -353,6 +353,29 @@
                 justify-content: space-between;
             }
         }
+
+        /* Announcement Bar */
+        #announcement-bar {
+            background: var(--gradient);
+            color: white;
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: none;
+            /* Hidden by default */
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
@@ -363,6 +386,8 @@
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
     </div>
+
+    <div id="announcement-bar"></div>
 
     <nav>
         <div class="nav-links">
@@ -433,9 +458,10 @@
     </div>
 
     <!-- Firebase SDKs -->
+    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, getDocs, addDoc, serverTimestamp, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collection, getDocs, getDoc, doc, addDoc, serverTimestamp, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: 'AIzaSyAxSkIEIikfAHa-LpBPjJ2RUL1CrXhBLAY',
@@ -475,15 +501,15 @@
                     const card = document.createElement('div');
                     card.className = 'testimonial-card';
                     card.innerHTML = `
-                        <div class="user-info">
-                            <div class="avatar">${initials}</div>
-                            <div>
-                                <h4>${data.nombre || 'Anónimo'}</h4>
-                                <div class="stars">${starsHTML}</div>
-                            </div>
-                        </div>
-                        <p class="description">"${data.comentario}"</p>
-                    `;
+            <div class="user-info">
+                <div class="avatar">${initials}</div>
+                <div>
+                    <h4>${data.nombre || 'Anónimo'}</h4>
+                    <div class="stars">${starsHTML}</div>
+                </div>
+            </div>
+            <p class="description">"${data.comentario}"</p>
+            `;
                     container.appendChild(card);
                 });
 
@@ -550,6 +576,25 @@
         }
 
         loadOpinions();
+
+        // Check Banner
+        async function checkBanner() {
+            try {
+                const docSnap = await getDoc(doc(db, 'config', 'banner'));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.isActive && data.text) {
+                        const bar = document.getElementById('announcement-bar');
+                        bar.innerText = data.text;
+                        bar.style.display = 'block';
+                        if (data.color) bar.style.backgroundColor = data.color;
+                    }
+                }
+            } catch (e) {
+                console.log("No banner config found or error.");
+            }
+        }
+        checkBanner();
 
     </script>
 </body>
