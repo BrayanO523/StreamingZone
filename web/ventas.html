@@ -642,6 +642,68 @@
             display: block;
         }
 
+        /* Featured Reviews */
+        .reviews-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .reviews-grid {
+                display: flex;
+                overflow-x: auto;
+                padding-bottom: 1rem;
+                scroll-snap-type: x mandatory;
+            }
+
+            .review-card {
+                min-width: 260px;
+                scroll-snap-align: center;
+            }
+        }
+
+        .review-card {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .review-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .review-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .review-name {
+            font-weight: bold;
+            color: var(--text-light);
+        }
+
+        .review-text {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+            line-height: 1.4;
+            font-style: italic;
+        }
+
         /* Responsive */
         /* Responsive Premium Mobile */
         @media (max-width: 768px) {
@@ -885,11 +947,18 @@
     </div>
 
     <!-- Secciones de Confianza -->
-    <section class="trust-section" style="text-align: center; padding: 2rem;">
-        <a href="opiniones.html" class="btn-opinion"
-            style="text-decoration:none; display:inline-block; margin-bottom: 2rem;">
-            <i class="fas fa-star"></i> Ver Opiniones de Clientes
-        </a>
+    <!-- Featured Reviews -->
+    <section class="container" style="margin-top: 4rem;">
+        <h2 class="section-title" style="text-align: center; margin-bottom: 1.5rem;">Lo que dicen nuestros clientes</h2>
+        <div id="featured-reviews" class="reviews-grid">
+            <p style="text-align:center; color: var(--text-gray); width:100%;">Cargando opiniones...</p>
+        </div>
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <a href="opiniones.html" class="btn-opinion"
+                style="text-decoration:none; display:inline-block; padding: 0.8rem 1.5rem; background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:2rem; color:white; transition:all 0.3s;">
+                <i class="fas fa-star"></i> Ver Todas las Opiniones
+            </a>
+        </div>
     </section>
 
     <section class="faq-section">
@@ -1025,7 +1094,7 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, getDocs, getDoc, doc, addDoc, serverTimestamp, query, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collection, getDocs, getDoc, doc, addDoc, serverTimestamp, query, limit, orderBy, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         const firebaseConfig = {
             apiKey: 'AIzaSyAxSkIEIikfAHa-LpBPjJ2RUL1CrXhBLAY',
@@ -1326,7 +1395,8 @@
                     id: item.id || '',
                     name: item.name,
                     price: Number(item.price),
-                    qty: item.qty
+                    qty: item.qty,
+                    imageUrl: item.imageUrl || ''
                 }));
 
                 await addDoc(collection(db, 'orders'), {
@@ -1367,6 +1437,66 @@
             }
         }
 
+        // --- Featured Reviews ---
+        async function loadFeaturedReviews() {
+            try {
+                const reviewsDiv = document.getElementById('featured-reviews');
+                // Get top 3 reviews with 5 stars (simplified query to avoid index requirement)
+                const q = query(collection(db, 'OPINIONES'), where('estrellas', '==', 5), limit(3));
+                const snapshot = await getDocs(q);
+
+                if (snapshot.empty) {
+                    reviewsDiv.innerHTML = '<p style="color:var(--text-gray); text-align:center;">Sé el primero en opinar.</p>';
+                    return;
+                }
+
+                reviewsDiv.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const initial = data.nombre ? data.nombre.charAt(0).toUpperCase() : 'C';
+
+                    const card = document.createElement('div');
+                    card.className = 'review-card';
+                    card.innerHTML = `
+                        <div class="review-header">
+                            <div class="review-avatar">${initial}</div>
+                            <div>
+                                <div class="review-name">${data.nombre || 'Cliente'}</div>
+                                <div style="color:#fbbf24; font-size:0.8rem;">⭐⭐⭐⭐⭐</div>
+                            </div>
+                        </div>
+                        <div class="review-text">"${data.comentario}"</div>
+                    `;
+                    reviewsDiv.appendChild(card);
+                });
+            } catch (e) {
+                console.error("Error loading reviews:", e);
+                // If index missing, handle gracefully?
+                if (e.message.includes('requires an index')) {
+                    console.warn("Index required. Please create it in Firebase Console.");
+                }
+                document.getElementById('featured-reviews').innerHTML = '<p style="color:var(--text-gray);">Opiniones disponibles pronto.</p>';
+            }
+        }
+
+        // --- FAQ Logic ---
+        function setupFAQ() {
+            const items = document.querySelectorAll('.faq-item');
+            console.log(`🔧 Setup FAQ: Found ${items.length} items`);
+
+            items.forEach(item => {
+                const q = item.querySelector('.faq-question');
+                q.addEventListener('click', () => {
+                    console.log("👉 FAQ Clicked");
+                    // Close others
+                    items.forEach(i => {
+                        if (i !== item) i.classList.remove('active');
+                    });
+                    item.classList.toggle('active');
+                });
+            });
+        }
+
         // --- Opinion Logic ---
         window.submitOpinion = async (e) => {
             e.preventDefault();
@@ -1401,9 +1531,6 @@
                 alert("¡Gracias por tu opinión!");
                 document.getElementById('opinionForm').reset();
                 closeOpinionModal();
-                alert("¡Gracias por tu opinión!");
-                document.getElementById('opinionForm').reset();
-                closeOpinionModal();
                 // loadOpinions(); // Removed because opinions are on a separate page
 
                 btn.innerText = originalText;
@@ -1415,19 +1542,13 @@
             }
         }
 
-        // --- FAQ Logic ---
-        document.querySelectorAll('.faq-question').forEach(item => {
-            item.addEventListener('click', () => {
-                const parent = item.parentElement;
-                parent.classList.toggle('active');
-            });
-        });
-
         // Start
         console.log("🚀 Starting App...");
         try {
             loadProducts().then(() => console.log("✅ loadProducts finished"));
             checkBanner().then(() => console.log("✅ checkBanner finished"));
+            loadFeaturedReviews().then(() => console.log("✅ reviews finished"));
+            setupFAQ();
         } catch (err) {
             console.error("❌ Critical Start Error:", err);
         }

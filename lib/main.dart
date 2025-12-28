@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
@@ -170,43 +171,139 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
-class InventoryView extends StatelessWidget {
+class InventoryView extends StatefulWidget {
   const InventoryView({super.key});
 
   @override
+  State<InventoryView> createState() => _InventoryViewState();
+}
+
+class _InventoryViewState extends State<InventoryView> {
+  final TextEditingController _searchController = TextEditingController();
+  String _selectedCategory = 'Todas';
+  String _searchText = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('products').snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError)
-          return Center(child: Text('Error: ${snapshot.error}'));
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final data = snapshot.requireData;
-        if (data.size == 0) {
-          return const Center(
-            child: Text(
-              'No hay productos.',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
+    return Column(
+      children: [
+        // Búsqueda
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Buscar producto...',
+              prefixIcon: const Icon(Icons.search, color: Colors.blueAccent),
+              filled: true,
+              fillColor: Colors.white.withOpacity(0.05),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: BorderSide.none,
+              ),
             ),
-          );
-        }
+            onChanged: (val) => setState(() => _searchText = val.toLowerCase()),
+          ),
+        ),
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: data.size,
-          itemBuilder: (context, index) {
-            final doc = data.docs[index];
-            final product = Product.fromMap(
-              doc.id,
-              doc.data() as Map<String, dynamic>,
-            );
-            return ProductCard(product: product);
-          },
-        );
-      },
+        // Categorías (Diseño horizontal)
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: ['Todas', 'Video', 'Música', 'Juegos', 'VPN', 'IA'].map((
+              cat,
+            ) {
+              final isSelected = _selectedCategory == cat;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text(cat),
+                  selected: isSelected,
+                  onSelected: (val) {
+                    if (val) setState(() => _selectedCategory = cat);
+                  },
+                  backgroundColor: Colors.white10,
+                  selectedColor: Colors.blueAccent.withOpacity(0.2),
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.blueAccent : Colors.white70,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('products')
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final docs = snapshot.requireData.docs;
+
+              // Filtrado Local
+              final filteredDocs = docs.where((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                final name = (data['name'] ?? '').toString().toLowerCase();
+                final desc = (data['description'] ?? '')
+                    .toString()
+                    .toLowerCase();
+                final category = data['category'] ?? 'Video';
+
+                bool matchesSearch =
+                    name.contains(_searchText) || desc.contains(_searchText);
+                bool matchesCategory =
+                    _selectedCategory == 'Todas' ||
+                    category == _selectedCategory;
+
+                return matchesSearch && matchesCategory;
+              }).toList();
+
+              if (filteredDocs.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'No se encontraron productos.',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: filteredDocs.length,
+                itemBuilder: (context, index) {
+                  final doc = filteredDocs[index];
+                  final product = Product.fromMap(
+                    doc.id,
+                    doc.data() as Map<String, dynamic>,
+                  );
+                  return ProductCard(product: product);
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
@@ -416,86 +513,68 @@ class _OrdersViewState extends State<OrdersView> {
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
                     color: Colors.white10,
-                    child: ExpansionTile(
-                      title: Text(
-                        data['customerName'] ?? 'Cliente',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        'Total: HNL ${total.toStringAsFixed(2)} - ${date != null ? "${date.day}/${date.month} ${date.hour}:${date.minute}" : ""}',
-                      ),
-                      trailing: Chip(
-                        label: Text(
-                          (data['status'] ?? 'pending')
-                              .toString()
-                              .toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.white,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                OrderDetailPage(data: data, orderId: doc.id),
                           ),
-                        ),
-                        backgroundColor: _getStatusColor(data['status']),
-                      ),
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          width: double.infinity,
-                          color: Colors.black12,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Teléfono: ${data['phone'] ?? 'N/A'}'),
-                              const SizedBox(height: 8),
-                              const Text(
-                                'Productos:',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.blueAccent.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              ...items
-                                  .map(
-                                    (i) => Text(
-                                      '- ${i['name']} (HNL ${i['price']})',
-                                    ),
-                                  )
-                                  .toList(),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'Cambiar Estado:',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                              child: const Icon(
+                                Icons.shopping_bag,
+                                color: Colors.blueAccent,
                               ),
-                              const SizedBox(height: 8),
-                              Row(
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  _StatusButton(
-                                    label: 'PENDIENTE',
-                                    color: Colors.orange,
-                                    isSelected:
-                                        data['status'] == 'pending' ||
-                                        data['status'] == null,
-                                    onTap: () =>
-                                        _updateStatus(doc.id, 'pending'),
+                                  Text(
+                                    data['customerName'] ?? 'Cliente',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  _StatusButton(
-                                    label: 'COMPLETO',
-                                    color: Colors.green,
-                                    isSelected: data['status'] == 'completed',
-                                    onTap: () =>
-                                        _updateStatus(doc.id, 'completed'),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'HNL ${total.toStringAsFixed(2)} • ${items.length} items',
+                                    style: const TextStyle(color: Colors.grey),
                                   ),
-                                  const SizedBox(width: 8),
-                                  _StatusButton(
-                                    label: 'CANCELADO',
-                                    color: Colors.red,
-                                    isSelected: data['status'] == 'cancelled',
-                                    onTap: () =>
-                                        _updateStatus(doc.id, 'cancelled'),
+                                  Text(
+                                    date != null
+                                        ? DateFormat(
+                                            'dd MMM, hh:mm a',
+                                          ).format(date)
+                                        : '',
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            ),
+                            _StatusBadge(status: data['status'] ?? 'pending'),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.chevron_right, color: Colors.grey),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   );
                 },
@@ -547,24 +626,6 @@ class _OrdersViewState extends State<OrdersView> {
         _currentPage--;
       });
     }
-  }
-
-  Color _getStatusColor(String? status) {
-    switch (status) {
-      case 'completed':
-        return Colors.green;
-      case 'cancelled':
-        return Colors.red;
-      case 'pending':
-      default:
-        return Colors.orange;
-    }
-  }
-
-  Future<void> _updateStatus(String docId, String newStatus) async {
-    await FirebaseFirestore.instance.collection('orders').doc(docId).update({
-      'status': newStatus,
-    });
   }
 }
 
@@ -687,43 +748,6 @@ class FinancesView extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _StatusButton extends StatelessWidget {
-  final String label;
-  final Color color;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _StatusButton({
-    required this.label,
-    required this.color,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? color : Colors.transparent,
-          border: Border.all(color: color),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : color,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
     );
   }
 }
@@ -1276,5 +1300,362 @@ class _ProductDialogState extends State<ProductDialog> {
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
+  }
+}
+
+class OrderDetailPage extends StatelessWidget {
+  final Map<String, dynamic> data;
+  final String orderId;
+
+  const OrderDetailPage({super.key, required this.data, required this.orderId});
+
+  @override
+  Widget build(BuildContext context) {
+    final items = (data['items'] as List<dynamic>?) ?? [];
+    final total = data['total'] ?? 0.0;
+    final date = (data['createdAt'] as Timestamp?)?.toDate();
+    final status = data['status'] ?? 'pending';
+    final phone = data['phone'] ?? '';
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Detalle de Orden'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.copy),
+            onPressed: () {
+              _copyOrderToClipboard(
+                context,
+                items,
+                total,
+                data['customerName'] ?? 'Cliente',
+              );
+            },
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Orden #${orderId.substring(0, 8)}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      Text(
+                        date != null
+                            ? DateFormat('dd MMM yyyy, hh:mm a').format(date)
+                            : '',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+                _StatusBadge(status: status),
+              ],
+            ),
+            const Divider(height: 32),
+
+            // Customer
+            const Text(
+              'Cliente',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueAccent,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(child: Icon(Icons.person)),
+              title: Text(
+                data['customerName'] ?? 'Sin Nombre',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(phone),
+              trailing: IconButton(
+                icon: const Icon(Icons.message, color: Colors.green),
+                onPressed: () => _launchWhatsApp(phone),
+              ),
+            ),
+            const Divider(height: 32),
+
+            // Items
+            const Text(
+              'Productos',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueAccent,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final item = items[index];
+                final imgUrl = item['imageUrl'] as String?;
+                return Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: (imgUrl != null && imgUrl.isNotEmpty)
+                            ? Image.network(
+                                imgUrl,
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  width: 60,
+                                  height: 60,
+                                  color: Colors.grey,
+                                  child: const Icon(Icons.image_not_supported),
+                                ),
+                              )
+                            : Container(
+                                width: 60,
+                                height: 60,
+                                color: Colors.blueGrey,
+                                child: const Icon(Icons.shopping_bag),
+                              ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['name'] ?? 'Producto',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                            Text(
+                              'Cant: ${item['qty'] ?? 1} x HNL ${item['price']}',
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        'HNL ${(item['qty'] ?? 1) * (item['price'] ?? 0)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Total General:',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'HNL ${total.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.greenAccent,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 40),
+
+            // Actions
+            const Text(
+              'Gestionar Estado',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueAccent,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _ActionBtn(
+                  label: 'Pendiente',
+                  color: Colors.orange,
+                  icon: Icons.schedule,
+                  onTap: () => _updateStatus(context, 'pending'),
+                ),
+                _ActionBtn(
+                  label: 'Completar',
+                  color: Colors.green,
+                  icon: Icons.check_circle,
+                  onTap: () => _updateStatus(context, 'completed'),
+                ),
+                _ActionBtn(
+                  label: 'Cancelar',
+                  color: Colors.red,
+                  icon: Icons.cancel,
+                  onTap: () => _updateStatus(context, 'cancelled'),
+                ),
+                _ActionBtn(
+                  label: 'Archivar',
+                  color: Colors.grey,
+                  icon: Icons.archive,
+                  onTap: () => _updateStatus(context, 'archived'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _launchWhatsApp(String? phone) async {
+    if (phone == null || phone.isEmpty) return;
+    // Remove +504 if double
+    var cleanPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (!cleanPhone.startsWith('504') && cleanPhone.length == 8)
+      cleanPhone = '504$cleanPhone';
+
+    final url = Uri.parse("https://wa.me/$cleanPhone");
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    }
+  }
+
+  void _copyOrderToClipboard(
+    BuildContext context,
+    List items,
+    dynamic total,
+    String name,
+  ) {
+    String text = "*Pedido de $name:*\n";
+    for (var item in items) {
+      text += "- ${item['qty']}x ${item['name']}\n";
+    }
+    text += "*Total: HNL $total*";
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Pedido copiado al portapapeles')),
+    );
+  }
+
+  void _updateStatus(BuildContext context, String newStatus) {
+    FirebaseFirestore.instance.collection('orders').doc(orderId).update({
+      'status': newStatus,
+    });
+    Navigator.pop(context); // Go back after update
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String status;
+  const _StatusBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    Color color;
+    switch (status) {
+      case 'completed':
+        color = Colors.green;
+        break;
+      case 'cancelled':
+        color = Colors.red;
+        break;
+      case 'archived':
+        color = Colors.grey;
+        break;
+      default:
+        color = Colors.orange;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color),
+      ),
+      child: Text(
+        status.toUpperCase(),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionBtn extends StatelessWidget {
+  final String label;
+  final Color color;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _ActionBtn({
+    required this.label,
+    required this.color,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        width: 100,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.5)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
