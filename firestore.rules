@@ -15,5 +15,8 @@ service cloud.firestore {
     match /config/{document=**} {
       allow read, write: if true;
     }
+    match /combos/{document=**} {
+      allow read, write: if true;
+    }
   }
 }
