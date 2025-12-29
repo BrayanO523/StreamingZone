@@ -4,12 +4,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'image_selector_dialog.dart';
+import 'dart:typed_data';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -281,8 +281,10 @@ class _ComboDialogState extends State<ComboDialog> {
   final _descController = TextEditingController();
   final _priceController = TextEditingController();
   // Image logic
-  File? _imageFile;
-  final ImagePicker _picker = ImagePicker();
+  Uint8List? _imageBytes;
+  String? _imageFileName;
+  // File? _imageFile; // Removed for web compatibility
+  // final ImagePicker _picker = ImagePicker(); // Removed
   String? _currentImageUrl;
   bool _isUploading = false;
 
@@ -333,30 +335,55 @@ class _ComboDialogState extends State<ComboDialog> {
   }
 
   Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
+    final result = await showDialog(
+      context: context,
+      builder: (context) =>
+          ImageSelectorDialog(initialUrl: _currentImageUrl ?? ''),
     );
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
+
+    if (result != null) {
+      if (result['type'] == 'url') {
+        setState(() {
+          _currentImageUrl = result['data'];
+          _imageBytes = null;
+          _imageFileName = null;
+        });
+      } else if (result['type'] == 'bytes') {
+        setState(() {
+          _imageBytes = result['data'];
+          _imageFileName = result['name'];
+          // Keep current image url until upload is done or verified,
+          // but strictly we'll show the bytes in preview.
+        });
+      }
     }
   }
 
   Future<String?> _uploadImage() async {
-    if (_imageFile == null) return _currentImageUrl;
+    if (_imageBytes == null) return _currentImageUrl;
     try {
       final String fileName =
+          _imageFileName ??
           'combos/${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final Reference ref = FirebaseStorage.instance.ref().child(fileName);
-      final UploadTask uploadTask = ref.putFile(_imageFile!);
+      // Ensure path is combos/
+      final String path = 'combos/${fileName.split('/').last}';
+
+      final Reference ref = FirebaseStorage.instance.ref().child(path);
+      // Upload bytes
+      final UploadTask uploadTask = ref.putData(
+        _imageBytes!,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+
       final TaskSnapshot snapshot = await uploadTask;
       final String downloadUrl = await snapshot.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al subir imagen: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al subir imagen: $e')));
+      }
       return null;
     }
   }
@@ -398,9 +425,9 @@ class _ComboDialogState extends State<ComboDialog> {
                       color: Colors.white10,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.white24),
-                      image: _imageFile != null
+                      image: _imageBytes != null
                           ? DecorationImage(
-                              image: FileImage(_imageFile!),
+                              image: MemoryImage(_imageBytes!),
                               fit: BoxFit.cover,
                             )
                           : (_currentImageUrl != null &&
@@ -412,7 +439,7 @@ class _ComboDialogState extends State<ComboDialog> {
                           : null,
                     ),
                     child:
-                        (_imageFile == null &&
+                        (_imageBytes == null &&
                             (_currentImageUrl == null ||
                                 _currentImageUrl!.isEmpty))
                         ? const Column(
@@ -425,7 +452,7 @@ class _ComboDialogState extends State<ComboDialog> {
                               ),
                               SizedBox(height: 8),
                               Text(
-                                'Toca para seleccionar imagen',
+                                'Tocar para seleccionar imagen',
                                 style: TextStyle(color: Colors.white54),
                               ),
                             ],
@@ -1665,8 +1692,10 @@ class _ProductDialogState extends State<ProductDialog> {
   late TextEditingController _descController;
   late TextEditingController _priceController;
   // late TextEditingController _imageController; // Removed in favor of file picker
-  File? _imageFile;
-  final ImagePicker _picker = ImagePicker();
+  Uint8List? _imageBytes;
+  String? _imageFileName;
+  // File? _imageFile;
+  // final ImagePicker _picker = ImagePicker();
   String? _currentImageUrl;
   bool _isUploading = false;
 
@@ -1702,31 +1731,50 @@ class _ProductDialogState extends State<ProductDialog> {
   }
 
   Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
+    final result = await showDialog(
+      context: context,
+      builder: (context) =>
+          ImageSelectorDialog(initialUrl: _currentImageUrl ?? ''),
     );
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
+
+    if (result != null) {
+      if (result['type'] == 'url') {
+        setState(() {
+          _currentImageUrl = result['data'];
+          _imageBytes = null;
+        });
+      } else if (result['type'] == 'bytes') {
+        setState(() {
+          _imageBytes = result['data'];
+          _imageFileName = result['name'];
+        });
+      }
     }
   }
 
   Future<String?> _uploadImage() async {
-    if (_imageFile == null) return _currentImageUrl;
+    if (_imageBytes == null) return _currentImageUrl;
     try {
-      final String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final Reference ref = FirebaseStorage.instance.ref().child(
-        'products/$fileName',
+      final String fileName =
+          _imageFileName ?? '${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final String path = 'products/${fileName.split('/').last}';
+
+      final Reference ref = FirebaseStorage.instance.ref().child(path);
+
+      final UploadTask uploadTask = ref.putData(
+        _imageBytes!,
+        SettableMetadata(contentType: 'image/jpeg'),
       );
-      final UploadTask uploadTask = ref.putFile(_imageFile!);
+
       final TaskSnapshot snapshot = await uploadTask;
       final String downloadUrl = await snapshot.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al subir imagen: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al subir imagen: $e')));
+      }
       return null;
     }
   }
@@ -1786,9 +1834,9 @@ class _ProductDialogState extends State<ProductDialog> {
                     color: Colors.grey[800],
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.grey[600]!),
-                    image: _imageFile != null
+                    image: _imageBytes != null
                         ? DecorationImage(
-                            image: FileImage(_imageFile!),
+                            image: MemoryImage(_imageBytes!),
                             fit: BoxFit.cover,
                           )
                         : (_currentImageUrl != null &&
@@ -1800,7 +1848,7 @@ class _ProductDialogState extends State<ProductDialog> {
                         : null,
                   ),
                   child:
-                      (_imageFile == null &&
+                      (_imageBytes == null &&
                           (_currentImageUrl == null ||
                               _currentImageUrl!.isEmpty))
                       ? const Column(
@@ -1866,7 +1914,7 @@ class _ProductDialogState extends State<ProductDialog> {
     setState(() => _isUploading = true);
     final String? imageUrl = await _uploadImage();
 
-    if (imageUrl == null && _imageFile != null) {
+    if (imageUrl == null && _imageBytes != null) {
       // Failed upload
       setState(() => _isUploading = false);
       return;

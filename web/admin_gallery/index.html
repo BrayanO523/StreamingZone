@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestor de Imágenes - StreamZone</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --text-light: #f8fafc;
+      --text-gray: #94a3b8;
+      --border: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1000px;
+      background: var(--bg-card);
+      border-radius: 1.5rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 90vh;
+    }
+
+    header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-gray);
+      transition: all 0.3s;
+      background: transparent;
+      border: none;
+      font-size: 1rem;
+      border-bottom: 2px solid transparent;
+    }
+
+    .tab:hover {
+      color: var(--text-light);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+      position: relative;
+    }
+
+    /* Gallery Grid */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .gallery-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s;
+      group: 'item';
+    }
+
+    .gallery-item:hover {
+      transform: scale(1.02);
+      border-color: var(--primary);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .copy-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+      color: white;
+      font-weight: 600;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .gallery-item:hover .copy-overlay {
+      opacity: 1;
+    }
+
+    /* Upload Area */
+    .upload-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 2rem;
+      text-align: center;
+    }
+
+    .drop-zone {
+      width: 100%;
+      max-width: 500px;
+      height: 300px;
+      border: 2px dashed var(--border);
+      border-radius: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .drop-zone i {
+      font-size: 4rem;
+      color: var(--text-gray);
+      margin-bottom: 1rem;
+    }
+
+    .drop-zone p {
+      color: var(--text-gray);
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Loading & Status */
+    .loader {
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 2rem auto;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .status-msg {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .status-msg.success {
+      background: rgba(34, 197, 94, 0.1);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      display: block;
+    }
+
+    .status-msg.error {
+      background: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      display: block;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #334155;
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border-radius: 2rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+      font-size: 0.9rem;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-images"></i> Biblioteca de Medios</h1>
+    </header>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('gallery')">Galería Usada</button>
+      <button class="tab" onclick="switchTab('upload')">Subir Nueva</button>
+    </div>
+
+    <!-- Gallery Tab -->
+    <div id="gallery-tab" class="content-area">
+      <div id="gallery-loader" class="loader"></div>
+      <div id="gallery-grid" class="gallery-grid hidden"></div>
+      <p id="gallery-empty" class="hidden" style="text-align: center; color: var(--text-gray); margin-top: 2rem;">
+        No se encontraron imágenes en la base de datos.
+      </p>
+    </div>
+
+    <!-- Upload Tab -->
+    <div id="upload-tab" class="content-area hidden">
+      <div class="upload-container">
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <h3>Arrastra tu imagen aquí</h3>
+          <p>O toca para seleccionar</p>
+          <p style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.7;">Max 20MB • JPG/PNG</p>
+          <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div id="upload-preview-area" class="hidden" style="text-align: center;">
+          <img id="preview-img"
+            style="max-height: 200px; border-radius: 0.5rem; border: 1px solid var(--border); margin-bottom: 1rem;">
+          <div>
+            <button id="btn-upload" class="btn" onclick="startUpload()">
+              <i class="fas fa-check"></i> Confirmar Subida
+            </button>
+            <button class="btn" style="background: transparent; border: 1px solid var(--border); margin-top: 0.5rem;"
+              onclick="resetUpload()">
+              Cancelar
+            </button>
+          </div>
+        </div>
+
+        <div id="upload-status" class="status-msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">URL copiada al portapapeles</div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+    // Configuración idéntica a la app/web principal
+    const firebaseConfig = {
+      apiKey: 'AIzaSyAxSkIEIikfAHa-LpBPjJ2RUL1CrXhBLAY',
+      appId: '1:813285975226:web:ced015d0f1bf1e82b98e83',
+      messagingSenderId: '813285975226',
+      projectId: 'streaming-plat-49327',
+      authDomain: 'streaming-plat-49327.firebaseapp.com',
+      storageBucket: 'streaming-plat-49327.firebasestorage.app',
+      measurementId: 'G-N15BBG3YR5',
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // State
+    let selectedFile = null;
+
+    // --- Gallery Logic ---
+    async function loadGallery() {
+      const grid = document.getElementById('gallery-grid');
+      const loader = document.getElementById('gallery-loader');
+      const empty = document.getElementById('gallery-empty');
+
+      grid.classList.add('hidden');
+      empty.classList.add('hidden');
+      loader.classList.remove('hidden');
+
+      try {
+        // 1. Fetch images from Products
+        const prodSnap = await getDocs(collection(db, 'products'));
+        const comboSnap = await getDocs(collection(db, 'combos'));
+
+        const urls = new Set();
+
+        prodSnap.forEach(doc => {
+          const d = doc.data();
+          if (d.imageUrl) urls.add(d.imageUrl);
+        });
+
+        comboSnap.forEach(doc => {
+          const d = doc.data();
+          if (d.imageUrl) urls.add(d.imageUrl);
+        });
+
+        const uniqueUrls = Array.from(urls);
+
+        if (uniqueUrls.length === 0) {
+          empty.classList.remove('hidden');
+        } else {
+          grid.innerHTML = '';
+          uniqueUrls.forEach(url => {
+            const div = document.createElement('div');
+            div.className = 'gallery-item';
+            div.innerHTML = `
+                            <img src="${url}" loading="lazy">
+                            <div class="copy-overlay">
+                                <i class="fas fa-copy fa-2x"></i>
+                                <span>Copiar URL</span>
+                            </div>
+                        `;
+            div.onclick = () => copyToClipboard(url);
+            grid.appendChild(div);
+          });
+          grid.classList.remove('hidden');
+        }
+      } catch (e) {
+        console.error("Error loading gallery:", e);
+        empty.innerText = "Error cargando imágenes: " + e.message;
+        empty.classList.remove('hidden');
+      } finally {
+        loader.classList.add('hidden');
+      }
+    }
+
+    // --- Upload Logic ---
+    window.handleFileSelect = (e) => {
+      const file = e.target.files[0];
+      processFile(file);
+    }
+
+    // Drag & Drop
+    const dropZone = document.getElementById('dropZone');
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        processFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    document.getElementById('fileInput').addEventListener('change', window.handleFileSelect);
+
+    function processFile(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        alert('Por favor selecciona un archivo de imagen válido.');
+        return;
+      }
+      selectedFile = file;
+
+      // Preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById('preview-img').src = e.target.result;
+        document.getElementById('dropZone').classList.add('hidden');
+        document.getElementById('upload-preview-area').classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    window.resetUpload = () => {
+      selectedFile = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('dropZone').classList.remove('hidden');
+      document.getElementById('upload-preview-area').classList.add('hidden');
+      document.getElementById('upload-status').className = 'status-msg';
+      document.getElementById('upload-status').innerText = '';
+    }
+
+    window.startUpload = async () => {
+      if (!selectedFile) return;
+
+      const btn = document.getElementById('btn-upload');
+      const status = document.getElementById('upload-status');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+      status.className = 'status-msg';
+      status.style.display = 'block';
+      status.innerText = 'Optimizando imagen...';
+
+      try {
+        // 1. Compress Image (Client Side)
+        const compressedBlob = await compressImage(selectedFile);
+
+        status.innerText = `Subiendo... (${(compressedBlob.size / 1024 / 1024).toFixed(2)} MB)`;
+
+        // 2. Upload
+        const fileName = `uploads/${Date.now()}_${selectedFile.name}`;
+        const storageRef = ref(storage, fileName);
+
+        await uploadBytes(storageRef, compressedBlob);
+        const downloadURL = await getDownloadURL(storageRef);
+
+        // Success
+        status.className = 'status-msg success';
+        status.innerHTML = `
+                    <p style="font-weight:bold; margin-bottom:0.5rem;">¡Imagen subida con éxito!</p>
+                    <div style="background: rgba(0,0,0,0.2); padding:0.5rem; border-radius:0.3rem; word-break:break-all; font-family:monospace; user-select:all;">${downloadURL}</div>
+                    <button class="btn" onclick="copyToClipboard('${downloadURL}')" style="margin-top:0.5rem; padding:0.4rem 1rem; font-size:0.8rem;">
+                        <i class="fas fa-copy"></i> Copiar URL
+                    </button>
+                    <button class="btn" onclick="resetUpload()" style="margin-top:0.5rem; padding:0.4rem 1rem; font-size:0.8rem; background:transparent; border:1px solid white;">Subir otra</button>
+                `;
+        btn.classList.add('hidden');
+
+        // Refresh gallery silently
+        loadGallery();
+
+      } catch (e) {
+        console.error(e);
+        status.className = 'status-msg error';
+        status.innerText = 'Error al subir: ' + e.message;
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Intentar de nuevo';
+      }
+    };
+
+    // Compression Utility using Canvas
+    async function compressImage(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const MAX_SIZE = 1080;
+
+            if (width > height) {
+              if (width > MAX_SIZE) {
+                height *= MAX_SIZE / width;
+                width = MAX_SIZE;
+              }
+            } else {
+              if (height > MAX_SIZE) {
+                width *= MAX_SIZE / height;
+                height = MAX_SIZE;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Quality logic based on size similar to Dart
+            const sizeMB = file.size / 1024 / 1024;
+            let quality = 0.85;
+            if (sizeMB > 5) quality = 0.70;
+            if (sizeMB > 10) quality = 0.50;
+
+            canvas.toBlob((blob) => {
+              if (blob) resolve(blob);
+              else reject(new Error('Canvas to Blob failed'));
+            }, 'image/jpeg', quality);
+          };
+          img.onerror = (e) => reject(e);
+        };
+        reader.onerror = (e) => reject(e);
+      });
+    }
+
+    // --- Setup ---
+    window.switchTab = (tab) => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.content-area').forEach(c => c.classList.add('hidden'));
+
+      if (tab === 'gallery') {
+        document.querySelector('[onclick="switchTab(\'gallery\')"]').classList.add('active');
+        document.getElementById('gallery-tab').classList.remove('hidden');
+        loadGallery();
+      } else {
+        document.querySelector('[onclick="switchTab(\'upload\')"]').classList.add('active');
+        document.getElementById('upload-tab').classList.remove('hidden');
+      }
+    }
+
+    window.copyToClipboard = (text) => {
+      navigator.clipboard.writeText(text).then(() => {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+      });
+    }
+
+    // Initial Load
+    loadGallery();
+
+  </script>
+</body>
+
+</html>
