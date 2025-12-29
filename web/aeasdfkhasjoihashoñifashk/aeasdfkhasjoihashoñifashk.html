@@ -313,21 +313,15 @@
     </header>
 
     <div class="tabs">
-      <button class="tab active" onclick="switchTab('gallery')">Galería Usada</button>
-      <button class="tab" onclick="switchTab('upload')">Subir Nueva</button>
+      <!-- <button class="tab active" onclick="switchTab('gallery')">Galería Usada</button> -->
+      <button class="tab active" onclick="switchTab('upload')">Subir Nueva Imagen</button>
     </div>
 
-    <!-- Gallery Tab -->
-    <div id="gallery-tab" class="content-area">
-      <div id="gallery-loader" class="loader"></div>
-      <div id="gallery-grid" class="gallery-grid hidden"></div>
-      <p id="gallery-empty" class="hidden" style="text-align: center; color: var(--text-gray); margin-top: 2rem;">
-        No se encontraron imágenes en la base de datos.
-      </p>
-    </div>
+    <!-- Gallery Tab (REMOVED) -->
+    <!-- <div id="gallery-tab" class="content-area"></div> -->
 
     <!-- Upload Tab -->
-    <div id="upload-tab" class="content-area hidden">
+    <div id="upload-tab" class="content-area">
       <div class="upload-container">
         <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
           <i class="fas fa-cloud-upload-alt"></i>
@@ -381,63 +375,6 @@
 
     // State
     let selectedFile = null;
-
-    // --- Gallery Logic ---
-    async function loadGallery() {
-      const grid = document.getElementById('gallery-grid');
-      const loader = document.getElementById('gallery-loader');
-      const empty = document.getElementById('gallery-empty');
-
-      grid.classList.add('hidden');
-      empty.classList.add('hidden');
-      loader.classList.remove('hidden');
-
-      try {
-        // 1. Fetch images from Products
-        const prodSnap = await getDocs(collection(db, 'products'));
-        const comboSnap = await getDocs(collection(db, 'combos'));
-
-        const urls = new Set();
-
-        prodSnap.forEach(doc => {
-          const d = doc.data();
-          if (d.imageUrl) urls.add(d.imageUrl);
-        });
-
-        comboSnap.forEach(doc => {
-          const d = doc.data();
-          if (d.imageUrl) urls.add(d.imageUrl);
-        });
-
-        const uniqueUrls = Array.from(urls);
-
-        if (uniqueUrls.length === 0) {
-          empty.classList.remove('hidden');
-        } else {
-          grid.innerHTML = '';
-          uniqueUrls.forEach(url => {
-            const div = document.createElement('div');
-            div.className = 'gallery-item';
-            div.innerHTML = `
-                            <img src="${url}" loading="lazy">
-                            <div class="copy-overlay">
-                                <i class="fas fa-copy fa-2x"></i>
-                                <span>Copiar URL</span>
-                            </div>
-                        `;
-            div.onclick = () => copyToClipboard(url);
-            grid.appendChild(div);
-          });
-          grid.classList.remove('hidden');
-        }
-      } catch (e) {
-        console.error("Error loading gallery:", e);
-        empty.innerText = "Error cargando imágenes: " + e.message;
-        empty.classList.remove('hidden');
-      } finally {
-        loader.classList.add('hidden');
-      }
-    }
 
     // --- Upload Logic ---
     window.handleFileSelect = (e) => {
@@ -525,8 +462,7 @@
                 `;
         btn.classList.add('hidden');
 
-        // Refresh gallery silently
-        loadGallery();
+        // No gallery reload needed
 
       } catch (e) {
         console.error(e);
@@ -587,17 +523,7 @@
 
     // --- Setup ---
     window.switchTab = (tab) => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.content-area').forEach(c => c.classList.add('hidden'));
-
-      if (tab === 'gallery') {
-        document.querySelector('[onclick="switchTab(\'gallery\')"]').classList.add('active');
-        document.getElementById('gallery-tab').classList.remove('hidden');
-        loadGallery();
-      } else {
-        document.querySelector('[onclick="switchTab(\'upload\')"]').classList.add('active');
-        document.getElementById('upload-tab').classList.remove('hidden');
-      }
+      // Tab logic simplified or removed if only one tab exists
     }
 
     window.copyToClipboard = (text) => {
@@ -608,8 +534,8 @@
       });
     }
 
-    // Initial Load
-    loadGallery();
+    // Initial Load - No Gallery
+
 
   </script>
 </body>

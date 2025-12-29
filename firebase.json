@@ -30,14 +30,6 @@
         ],
         "rewrites": [
             {
-                "source": "/aeasdfkhasjoihashoñifashk/aeasdfkhasjoihashoñifashk.html",
-                "destination": "/admin_gallery/index.html"
-            },
-            {
-                "source": "/aeasdfkhasjoihasho%C3%B1ifashk/aeasdfkhasjoihasho%C3%B1ifashk.html",
-                "destination": "/admin_gallery/index.html"
-            },
-            {
                 "source": "/",
                 "destination": "/ventas.html"
             }
