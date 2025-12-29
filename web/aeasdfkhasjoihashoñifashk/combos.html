@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combos | StreamZone</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --accent: #ec4899;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-light: #f8fafc;
+            --text-gray: #94a3b8;
+            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--primary);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: var(--secondary);
+            bottom: -100px;
+            right: -100px;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: var(--accent);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(30px, 50px);
+            }
+        }
+
+        /* Navbar */
+        nav {
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.9);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--accent);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            flex-grow: 1;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        /* Combo Card */
+        .card {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            padding: 0;
+            /* Updated for full image width */
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.3);
+        }
+
+        .card-content {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .card-img-container {
+            width: 100%;
+            height: 200px;
+            background: #0f172a;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .card:hover .card-img {
+            transform: scale(1.1);
+        }
+
+        .badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--gradient);
+            padding: 0.3rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            z-index: 10;
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .description {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+            line-height: 1.5;
+        }
+
+        .products-count {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1rem;
+        }
+
+        .price-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-light);
+        }
+
+        .btn-add {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-add:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Floating Cart & Modal (Same as ventas.html) */
+        .cart-float {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--gradient);
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.5);
+            transition: transform 0.3s;
+            z-index: 200;
+        }
+
+        .cart-float:hover {
+            transform: scale(1.1);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.8rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 2px solid var(--bg-dark);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 300;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal h2 {
+            margin-bottom: 1.5rem;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-gray);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .cart-items {
+            max-height: 50vh;
+            overflow-y: auto;
+            margin-bottom: 1.5rem;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            padding-top: 1rem;
+            border-top: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 0.2rem;
+        }
+
+        .qty-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .qty-val {
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .btn-checkout {
+            background: #25D366;
+            color: white;
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 1rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-checkout:hover {
+            opacity: 0.9;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-gray);
+            font-size: 0.9rem;
+            background: rgba(15, 23, 42, 0.9);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: auto;
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        #announcement-bar {
+            background: var(--gradient);
+            color: white;
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: none;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div id="announcement-bar"></div>
+
+    <nav>
+        <div class="nav-links">
+            <a href="ventas.html" class="logo">StreamZone</a>
+            <div style="display: flex; gap: 1.5rem;">
+                <a href="ventas.html" class="nav-link">Inicio</a>
+                <a href="opiniones.html" class="nav-link">Opiniones</a>
+                <a href="#" class="nav-link active">Combos</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Combos Exclusivos</h2>
+            <p style="color: var(--text-gray); max-width: 600px; margin: 0 auto;">
+                Ahorra más llevando tus productos favoritos en combo. Las mejores combinaciones seleccionadas para ti.
+            </p>
+        </div>
+
+        <div id="combos-grid" class="grid">
+            <p style="text-align: center; grid-column: 1/-1; color: var(--text-gray);">Cargando combos...</p>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2025 StreamZone. Todos los derechos reservados.
+    </footer>
+
+    <!-- Floating Cart -->
+    <div class="cart-float" onclick="openCart()">
+        <i class="fas fa-shopping-cart"></i>
+        <div class="cart-count" id="cartCount">0</div>
+    </div>
+
+    <!-- Cart Modal (Copied logic from ventas.html) -->
+    <div class="modal-overlay" id="cartModal">
+        <div class="modal">
+            <div id="checkoutStep1">
+                <button class="close-modal" onclick="closeCart()">&times;</button>
+                <h2>Tu Carrito</h2>
+                <div class="cart-items" id="cartItemsList">
+                    <p style="text-align: center; color: var(--text-gray);">Tu carrito está vacío.</p>
+                </div>
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cartTotalValue">HNL 0.00</span>
+                </div>
+
+                <div
+                    style="margin-bottom: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 1rem;">
+                    <h4 style="margin-bottom: 0.5rem; color: var(--accent);">Tus Datos (Requerido)</h4>
+                    <input type="text" id="cartName" placeholder="Tu Nombre" required
+                        style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; color: white;">
+                    <input type="number" id="cartPhone" placeholder="Tu Celular (Sin +504)" required
+                        style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; color: white;">
+                </div>
+                <button class="btn-checkout" onclick="goToStep2()">
+                    Continuar <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <div id="checkoutStep2" style="display: none;">
+                <button class="close-modal" onclick="closeCart()">&times;</button>
+                <h2><i class="fas fa-university"></i> Datos de Pago</h2>
+                <div
+                    style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 1rem; margin-bottom: 1rem;">
+                    <h3 style="color: #22c55e; margin-bottom: 0.5rem;">Cuentas Bancarias</h3>
+                    <p style="margin-bottom: 0.5rem;"><strong>BAC Credomatic:</strong><br>123456789 (Nombre)</p>
+                    <p style="margin-bottom: 0.5rem;"><strong>FICOHSA:</strong><br>987654321 (Nombre)</p>
+                    <div
+                        style="margin-top: 1rem; padding: 0.5rem; background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 0.5rem; text-align: center;">
+                        <i class="fas fa-exclamation-triangle" style="color: #eab308;"></i>
+                        <span style="font-size: 0.9rem; color: #eab308;">Envía tu comprobante de pago a WhatsApp al
+                            finalizar.</span>
+                    </div>
+                </div>
+                <button class="btn-checkout" onclick="checkoutWhatsApp()">
+                    <i class="fab fa-whatsapp"></i> Completar en WhatsApp
+                </button>
+                <button
+                    style="width: 100%; padding: 0.8rem; background: transparent; border: 1px solid var(--text-gray); color: var(--text-gray); border-radius: 0.5rem; margin-top: 0.5rem; cursor: pointer;"
+                    onclick="goToStep1()">
+                    Atrás
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Combo Details Modal -->
+    <div class="modal-overlay" id="detailsModal">
+        <div class="modal">
+            <button class="close-modal" onclick="closeDetails()">&times;</button>
+            <div id="detailsContent" style="text-align: center;">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, getDoc, doc, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: 'AIzaSyAxSkIEIikfAHa-LpBPjJ2RUL1CrXhBLAY',
+            appId: '1:813285975226:web:ced015d0f1bf1e82b98e83',
+            messagingSenderId: '813285975226',
+            projectId: 'streaming-plat-49327',
+            authDomain: 'streaming-plat-49327.firebaseapp.com',
+            storageBucket: 'streaming-plat-49327.firebasestorage.app',
+            measurementId: 'G-N15BBG3YR5',
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let cart = [];
+        let allProductsMap = {}; // Map ID -> Product Data
+
+        // Load All Products first (efficient enough for this scale)
+        async function loadAllProducts() {
+            try {
+                const snapshot = await getDocs(collection(db, 'products'));
+                snapshot.forEach(doc => {
+                    allProductsMap[doc.id] = doc.data();
+                });
+            } catch (e) {
+                console.error("Error loading products map:", e);
+            }
+        }
+
+        // Load Combos
+        async function loadCombos() {
+            const container = document.getElementById('combos-grid');
+            try {
+                // Ensure products are loaded first to show names immediately if needed, 
+                // but strictly we can load them parallel. 
+                // Ideally prompt user to wait or show spinners. 
+                // Use await here to ensure map is ready when user clicks.
+                await loadAllProducts();
+
+                const querySnapshot = await getDocs(collection(db, 'combos'));
+
+                if (querySnapshot.empty) {
+                    container.innerHTML = `<p style="text-align: center; grid-column: 1/-1; color: var(--text-gray);">No hay combos disponibles en este momento.</p>`;
+                    return;
+                }
+
+                container.innerHTML = '';
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.available === false) return;
+
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    // Add click event to open details
+                    card.style.cursor = 'pointer';
+                    card.onclick = (e) => {
+                        // Prevent triggering if clicking directly on "Agregar" button inside
+                        if (e.target.closest('.btn-add')) return;
+                        openDetails(doc.id, data);
+                    };
+
+                    let imgUrl = data.imageUrl || 'https://placehold.co/400x300?text=Combo';
+                    if (!imgUrl.startsWith('http')) imgUrl = 'https://placehold.co/400x300?text=Combo';
+
+                    card.innerHTML = `
+                        <div class="badge">MEJOR PRECIO</div>
+                        <div class="card-img-container">
+                            <img src="${imgUrl}" class="card-img" onerror="this.src='https://placehold.co/400x300?text=Combo'">
+                        </div>
+                        <div class="card-content">
+                            <span class="products-count"><i class="fas fa-layers"></i> ${data.productIds ? data.productIds.length : 0} Productos</span>
+                            <h3>${data.name}</h3>
+                            <p class="description">${data.description}</p>
+                            <div class="price-row">
+                                <span class="price-value">HNL ${Number(data.price).toFixed(2)}</span>
+                                <button class="btn-add" onclick="window.addToCart('${doc.id}', '${data.name}', ${data.price})">
+                                    Agregar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = `<p style="text-align: center; grid-column: 1/-1; color: #ef4444;">Error cargando combos.</p>`;
+            }
+        }
+
+        // --- Details Modal Logic ---
+        window.openDetails = (id, data) => {
+            const modal = document.getElementById('detailsModal');
+            const content = document.getElementById('detailsContent');
+
+            // Build included products list
+            let includedHtml = '';
+            if (data.productIds && data.productIds.length > 0) {
+                includedHtml = '<ul style="text-align: left; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 0.5rem; margin: 1rem 0; list-style-position: inside;">';
+                data.productIds.forEach(pid => {
+                    const p = allProductsMap[pid];
+                    if (p) {
+                        includedHtml += `<li style="margin-bottom: 0.5rem; color: var(--text-light);"><i class="fas fa-check" style="color: var(--secondary); margin-right: 0.5rem;"></i>${p.name}</li>`;
+                    } else {
+                        includedHtml += `<li style="margin-bottom: 0.5rem; color: var(--text-gray);">Producto (ID: ${pid})</li>`;
+                    }
+                });
+                includedHtml += '</ul>';
+            } else {
+                includedHtml = '<p style="color: var(--text-gray);">No hay productos específicos listados.</p>';
+            }
+
+            let imgUrl = data.imageUrl || 'https://placehold.co/400x300?text=Combo';
+            if (!imgUrl.startsWith('http')) imgUrl = 'https://placehold.co/400x300?text=Combo';
+
+            content.innerHTML = `
+                <img src="${imgUrl}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 1rem; margin-bottom: 1rem;">
+                <h2 style="margin-bottom: 0.5rem; color: var(--accent);">${data.name}</h2>
+                <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">HNL ${Number(data.price).toFixed(2)}</div>
+                <p style="color: var(--text-gray); margin-bottom: 1rem;">${data.description}</p>
+                <h4 style="text-align: left; margin-bottom: 0.5rem;">Incluye:</h4>
+                ${includedHtml}
+                <button class="btn-checkout" onclick="window.addToCart('${id}', '${data.name}', ${data.price}); closeDetails();">
+                    Agregar al Carrito <i class="fas fa-cart-plus"></i>
+                </button>
+            `;
+
+            modal.style.display = 'flex';
+        };
+
+        window.closeDetails = () => {
+            document.getElementById('detailsModal').style.display = 'none';
+        };
+
+        // --- Cart Logic (Simplified from ventas.html) ---
+        window.addToCart = (id, name, price) => {
+            const existingItem = cart.find(item => item.id === id);
+            if (existingItem) {
+                existingItem.qty++;
+            } else {
+                cart.push({ id, name, price: Number(price), qty: 1, type: 'combo' });
+            }
+            updateCartUI();
+            openCart();
+        };
+
+        window.changeQuantity = (id, delta) => {
+            const itemIndex = cart.findIndex(item => item.id === id);
+            if (itemIndex > -1) {
+                cart[itemIndex].qty += delta;
+                if (cart[itemIndex].qty <= 0) {
+                    cart.splice(itemIndex, 1);
+                }
+                updateCartUI();
+            }
+        };
+
+        function updateCartUI() {
+            const totalItems = cart.reduce((acc, item) => acc + item.qty, 0);
+            document.getElementById('cartCount').innerText = totalItems;
+
+            const list = document.getElementById('cartItemsList');
+            const totalEl = document.getElementById('cartTotalValue');
+
+            if (cart.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: var(--text-gray);">Tu carrito está vacío.</p>';
+                totalEl.innerText = 'HNL 0.00';
+                return;
+            }
+
+            list.innerHTML = '';
+            let total = 0;
+            cart.forEach(item => {
+                total += item.price * item.qty;
+                const itemEl = document.createElement('div');
+                itemEl.className = 'cart-item';
+                itemEl.innerHTML = `
+                    <div class="cart-item-info">
+                        <h4>${item.name} <small style="color:var(--text-gray); font-weight:normal;">(${item.type || 'producto'})</small></h4>
+                        <p>HNL ${item.price.toFixed(2)}</p>
+                    </div>
+                    <div class="qty-controls">
+                        <button class="qty-btn" onclick="changeQuantity('${item.id}', -1)">-</button>
+                        <span class="qty-val">${item.qty}</span>
+                        <button class="qty-btn" onclick="changeQuantity('${item.id}', 1)">+</button>
+                    </div>
+                `;
+                list.appendChild(itemEl);
+            });
+            totalEl.innerText = 'HNL ' + total.toFixed(2);
+        }
+
+        // Modal Controls
+        window.openCart = () => { document.getElementById('cartModal').style.display = 'flex'; window.goToStep1(); }
+        window.closeCart = () => { document.getElementById('cartModal').style.display = 'none'; }
+        window.goToStep1 = () => { document.getElementById('checkoutStep1').style.display = 'block'; document.getElementById('checkoutStep2').style.display = 'none'; }
+
+        window.goToStep2 = () => {
+            const name = document.getElementById('cartName').value.trim();
+            const phone = document.getElementById('cartPhone').value.trim();
+            if (!name || !phone) { alert('Por favor, ingresa tu nombre y celular para continuar.'); return; }
+            document.getElementById('checkoutStep1').style.display = 'none';
+            document.getElementById('checkoutStep2').style.display = 'block';
+        }
+
+        window.onclick = (e) => {
+            if (e.target.id === 'cartModal') closeCart();
+            if (e.target.id === 'detailsModal') closeDetails();
+        }
+
+        // Checkout logic remains same...
+        window.checkoutWhatsApp = async () => {
+            if (cart.length === 0) return;
+            const name = document.getElementById('cartName').value.trim();
+            const phone = document.getElementById('cartPhone').value.trim();
+            const phoneNumber = "50431713603";
+
+            let message = `*Hola, quiero pedir un COMBO:*\n\n*Cliente:* ${name}\n*Celular:* ${phone}\n\n`;
+            let total = 0;
+            cart.forEach(p => {
+                message += `• ${p.qty}x ${p.name}\n`;
+                total += p.price * p.qty;
+            });
+            message += `\n*TOTAL: HNL ${total.toFixed(2)}*`;
+
+            // Save Order
+            try {
+                const itemsToSave = cart.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    qty: item.qty,
+                    type: 'combo'
+                }));
+
+                await addDoc(collection(db, 'orders'), {
+                    customerName: name,
+                    phone: phone ? '+504' + phone : '',
+                    items: itemsToSave,
+                    total: total,
+                    status: 'pending',
+                    createdAt: serverTimestamp()
+                });
+            } catch (e) {
+                console.error("Error saving lead:", e);
+            }
+
+            const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+            cart = [];
+            updateCartUI();
+            closeCart();
+        };
+
+        // Banner Check
+        async function checkBanner() {
+            try {
+                const docSnap = await getDoc(doc(db, 'config', 'banner'));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.isActive && data.text) {
+                        const bar = document.getElementById('announcement-bar');
+                        bar.innerText = data.text;
+                        bar.style.display = 'block';
+                        if (data.color) bar.style.backgroundColor = data.color;
+                    }
+                }
+            } catch (e) { }
+        }
+
+        loadCombos();
+        checkBanner();
+
+    </script>
+</body>
+
+</html>

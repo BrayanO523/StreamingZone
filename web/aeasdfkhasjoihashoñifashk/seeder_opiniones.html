@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Seeder Opiniones</title>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            authDomain: "streaming-plat-49327.firebaseapp.com",
+            projectId: "streaming-plat-49327",
+            storageBucket: "streaming-plat-49327.firebasestorage.app",
+            messagingSenderId: "148292880093",
+            appId: "1:148292880093:web:373197607a7e8e50b91e9f",
+            measurementId: "G-GMDG6L7SLW"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function seed() {
+            const reviews = [
+                {
+                    nombre: "Carlos R.",
+                    comentario: "Excelente servicio, la cuenta de Netflix funciona perfecto y la entrega fue inmediata como prometieron.",
+                    estrellas: 5,
+                    numero: "+50499001122"
+                },
+                {
+                    nombre: "María G.",
+                    comentario: "Muy confiable. He comprado Disney+ y HBO Max, cero caídas hasta el momento. Atención al cliente de 10.",
+                    estrellas: 5,
+                    numero: "+50488003344"
+                },
+                {
+                    nombre: "Juan P.",
+                    comentario: "La mejor opción para streaming. Precios súper accesibles y todo muy profesional.",
+                    estrellas: 5,
+                    numero: "+50477005566"
+                }
+            ];
+
+            const status = document.getElementById('status');
+            status.innerHTML = "Sembrando opiniones...<br>";
+
+            for (const r of reviews) {
+                try {
+                    await addDoc(collection(db, 'OPINIONES'), {
+                        ...r,
+                        fecha: serverTimestamp()
+                    });
+                    status.innerHTML += `✅ Añadida opinión de ${r.nombre}<br>`;
+                } catch (e) {
+                    status.innerHTML += `❌ Error con ${r.nombre}: ${e.message}<br>`;
+                }
+            }
+            status.innerHTML += "<b>¡Proceso terminado!</b><br><p>Ahora recarga ventas.html</p>";
+        }
+
+        window.startSeeding = seed;
+    </script>
+</head>
+
+<body style="background: #1e293b; color: white; font-family: sans-serif; padding: 2rem;">
+    <h1>Sembrador de Opiniones (Trust Builder)</h1>
+    <button onclick="startSeeding()"
+        style="padding: 1rem 2rem; background: #6366f1; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+        Sembrar 3 Opiniones de 5 Estrellas
+    </button>
+    <div id="status" style="margin-top: 2rem; line-height: 1.6;"></div>
+</body>
+
+</html>
